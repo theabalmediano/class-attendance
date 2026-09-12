@@ -1,0 +1,88 @@
+:root {
+  --ion-background-color: #0f172a;
+  --ion-background-color-rgb: 15, 23, 42;
+  --ion-background-color-step-50: #111c2b;
+  --ion-background-color-step-100: #162334;
+  --ion-background-color-step-150: #1b2b3d;
+  --ion-background-color-step-200: #213349;
+
+  --ion-text-color: #e5edf8;
+  --ion-text-color-rgb: 229, 237, 248;
+  --ion-text-color-step-50: #cbd5e1;
+  --ion-text-color-step-100: #a8b5c3;
+
+  --ion-toolbar-background: #111827;
+  --ion-item-background: #16273d;
+  --ion-card-background: #18263d;
+  --ion-card-color: #e5edf8;
+
+  --ion-color-primary: #3b82f6;
+  --ion-color-primary-rgb: 59, 130, 246;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #2563eb;
+  --ion-color-primary-tint: #60a5fa;
+
+  --ion-color-secondary: #14b8a6;
+  --ion-color-secondary-rgb: 20, 184, 166;
+  --ion-color-secondary-contrast: #ffffff;
+
+  --ion-color-success: #10b981;
+  --ion-color-success-rgb: 16, 185, 129;
+
+  --ion-color-warning: #fbbf24;
+  --ion-color-warning-rgb: 251, 191, 36;
+
+  --ion-color-danger: #ef4444;
+  --ion-color-danger-rgb: 239, 68, 68;
+
+  --ion-border-color: rgba(148, 163, 184, 0.22);
+  --ion-box-shadow-color: rgba(15, 23, 42, 0.45);
+}
+
+html,
+body,
+ion-app,
+ion-content,
+ion-page {
+  background: #0f172a;
+  color: #e5edf8;
+}
+
+body {
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+ion-content {
+  --background: #0f172a;
+  --color: #e5edf8;
+}
+
+ion-toolbar,
+ion-header,
+ion-tab-bar,
+ion-menu,
+ion-item,
+ion-card,
+ion-list {
+  --background: #16273d;
+  --color: #e5edf8;
+}
+
+ion-button {
+  --border-radius: 12px;
+}
+
+ion-searchbar {
+  --background: rgba(30, 41, 59, 0.85);
+  --color: #e5edf8;
+  --placeholder-color: #94a3b8;
+  --icon-color: #93c5fd;
+}
+
+ion-input,
+ion-textarea {
+  --background: rgba(30, 41, 59, 0.8);
+  --color: #e5edf8;
+  --placeholder-color: #94a3b8;
+}
