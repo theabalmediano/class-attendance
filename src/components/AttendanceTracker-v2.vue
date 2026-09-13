@@ -10,7 +10,7 @@
         <div class="user-profile">
           <img
             class="user-avatar"
-            :src="getStudentAvatar(currentUsername)"
+            :src="getStudentAvatar(currentUsername, currentProfile?.gender)"
             :alt="`${currentUsername || 'User'} avatar`"
           />
           <div class="user-info">
@@ -84,7 +84,7 @@
       <div v-for="record in filteredRecords" :key="record.id" class="record-card">
         <div class="record-header">
           <div class="student-profile">
-            <img class="student-avatar" :src="getStudentAvatar(record.name)" :alt="`${record.name} avatar`" />
+            <img class="student-avatar" :src="getStudentAvatar(record.name, registeredStudentProfile(record.name)?.gender)" :alt="`${record.name} avatar`" />
             <div class="record-name">{{ record.name }}</div>
           </div>
           <div v-if="record.status" :class="['record-status', record.status.toLowerCase()]">
@@ -180,6 +180,22 @@
         <ion-item class="dark-item">
           <ion-label position="stacked">Student Name</ion-label>
           <ion-input v-model="editForm.name" placeholder="Enter name"></ion-input>
+        </ion-item>
+        <ion-item class="dark-item">
+          <ion-label position="stacked">Section</ion-label>
+          <ion-select v-model="editForm.section" placeholder="Select section">
+            <ion-select-option v-for="section in catalogSections" :key="section" :value="section">
+              {{ section }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item class="dark-item">
+          <ion-label position="stacked">Subject</ion-label>
+          <ion-select v-model="editForm.subject" placeholder="Select subject">
+            <ion-select-option v-for="subject in catalogSubjects" :key="subject" :value="subject">
+              {{ subject }}
+            </ion-select-option>
+          </ion-select>
         </ion-item>
         <ion-item class="dark-item">
           <ion-label position="stacked">Status</ion-label>
@@ -290,6 +306,7 @@ import {
 import { add, checkmarkCircle, filterOutline, alertCircle, documentOutline, logOut } from 'ionicons/icons';
 import { logout, getAuthState, getCurrentUserProfile } from '../services/roleAuthService';
 import { useClassCatalog } from '../services/classCatalogService';
+import { getStudentAvatar } from '../services/avatarService';
 import {
   initializeRealtimeListener,
   stopRealtimeListener,
@@ -364,7 +381,7 @@ const registeredStudentProfile = (name: string) => {
   if (!stored) return null;
 
   try {
-    const users = JSON.parse(stored) as Array<{ role?: string; username: string; fullName?: string; section?: string; subject?: string }>;
+    const users = JSON.parse(stored) as Array<{ role?: string; username: string; fullName?: string; gender?: string; section?: string; subject?: string }>;
     const normalizedName = name.trim().toLowerCase();
     return users.find((user) => user.role === 'student'
       && [user.fullName, user.username].some((value) => value?.trim().toLowerCase() === normalizedName)) || null;
@@ -418,6 +435,8 @@ const addForm = ref({
 
 const editForm = ref({
   name: '',
+  section: '',
+  subject: '',
   status: 'PRESENT' as 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED',
   reason: '',
   date: ''
@@ -441,11 +460,6 @@ const hasDuplicateAttendanceRecord = (name: string, date: string, excludeId?: st
 
     return normalizeStudentName(record.name) === normalizedName && normalizeAttendanceDate(record.date) === normalizedDate;
   });
-};
-
-const getStudentAvatar = (name: string) => {
-  const safeName = (name || 'student').trim() || 'student';
-  return `https://api.dicebear.com/10.x/pixel-art/svg?seed=${encodeURIComponent(safeName)}&backgroundColor=1d4ed8,3b82f6,10b981`;
 };
 
 const getStartOfWeek = (date: Date) => {
@@ -619,6 +633,8 @@ const openEditModal = (id: string) => {
   if (record) {
     editingRecord.value = record;
     editForm.value.name = record.name;
+    editForm.value.section = record.section || '';
+    editForm.value.subject = record.subject || '';
     editForm.value.status = record.status;
     editForm.value.reason = record.reason || '';
     editForm.value.date = record.date;
@@ -655,8 +671,8 @@ const saveEdit = async () => {
         status: editForm.value.status,
         reason: editForm.value.reason,
         date: dateStr,
-        section: studentProfile?.section || editingRecord.value.section || '',
-        subject: studentProfile?.subject || editingRecord.value.subject || ''
+        section: editForm.value.section || studentProfile?.section || '',
+        subject: editForm.value.subject || studentProfile?.subject || ''
       });
 
       if (success) {
@@ -733,6 +749,7 @@ onUnmounted(() => {
 .attendance-container {
   width: min(100%, 1100px);
   max-width: 1100px;
+  box-sizing: border-box;
   padding: clamp(12px, 2vw, 24px);
   margin: 0 auto;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -1234,6 +1251,8 @@ ion-button {
 @media (max-width: 860px) {
   .attendance-container {
     width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .controls-section {
@@ -1267,7 +1286,7 @@ ion-button {
 
 @media (max-width: 560px) {
   .attendance-container {
-    padding: 12px;
+    padding: 16px clamp(16px, 5vw, 24px);
   }
 
   .controls-section {
@@ -1276,6 +1295,11 @@ ion-button {
 
   .action-group {
     gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .user-profile {
+    flex: 1 1 100%;
   }
 
   .filter-btn,
@@ -1294,6 +1318,7 @@ ion-button {
 
   .record-card {
     padding: 14px;
+    min-width: 0;
   }
 
   .record-header {

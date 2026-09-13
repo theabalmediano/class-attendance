@@ -30,7 +30,7 @@
         <div class="student-profile">
           <img
             class="student-avatar"
-            :src="getStudentAvatar(student.fullName || student.username)"
+            :src="getStudentAvatar(student.fullName || student.username, student.gender)"
             :alt="`${student.fullName || student.username} avatar`"
           />
           <div>
@@ -45,47 +45,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { IonIcon, IonSearchbar } from '@ionic/vue';
 import { peopleOutline } from 'ionicons/icons';
 import { getCurrentUserProfile } from '../services/roleAuthService';
-
-interface StudentProfile {
-  username: string;
-  fullName?: string;
-  gender?: string;
-  section?: string;
-  subject?: string;
-  role?: string;
-}
+import { getStudentAvatar } from '../services/avatarService';
+import { initializeRealtimeListener, stopRealtimeListener, useRecords } from '../services/firestoreService';
+import { getDirectoryStudents, StudentDirectoryProfile } from '../services/studentDirectoryService';
 
 const route = useRoute();
 const router = useRouter();
 const searchQuery = ref('');
 const currentProfile = getCurrentUserProfile();
+const records = useRecords();
 
 const decodedSectionName = computed(() => decodeURIComponent(String(route.params.sectionName || '')));
 const decodedSubjectName = computed(() => decodeURIComponent(String(route.params.subjectName || '')));
 
-const students = computed<StudentProfile[]>(() => {
-  const stored = localStorage.getItem('attendanceUsers');
-  if (!stored) return [];
-
-  try {
-    const parsed = JSON.parse(stored) as StudentProfile[];
-    return parsed.filter(
-      (user) => user.role === 'student'
-        && user.section?.trim() === decodedSectionName.value
-        && user.subject?.trim() === decodedSubjectName.value
-        && (currentProfile?.role !== 'student'
-          || (currentProfile.section?.trim() === decodedSectionName.value
-            && currentProfile.subject?.trim() === decodedSubjectName.value))
-    );
-  } catch {
-    return [];
-  }
-});
+const students = computed<StudentDirectoryProfile[]>(() => getDirectoryStudents(records.value).filter(
+  (student) => student.section?.trim() === decodedSectionName.value
+    && student.subject?.trim() === decodedSubjectName.value
+    && (currentProfile?.role !== 'student'
+      || (currentProfile.section?.trim() === decodedSectionName.value
+        && currentProfile.subject?.trim() === decodedSubjectName.value))
+));
 
 const filteredStudents = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
@@ -93,11 +77,6 @@ const filteredStudents = computed(() => {
     .filter((student) => !query || (student.fullName || student.username).toLowerCase().includes(query))
     .sort((a, b) => (a.fullName || a.username).localeCompare(b.fullName || b.username));
 });
-
-const getStudentAvatar = (name: string) => {
-  const safeName = (name || 'student').trim() || 'student';
-  return `https://api.dicebear.com/10.x/pixel-art/svg?seed=${encodeURIComponent(safeName)}&backgroundColor=1d4ed8,3b82f6,10b981`;
-};
 
 const goBack = () => {
   router.push(`/students/${encodeURIComponent(decodedSectionName.value)}`);
@@ -109,10 +88,17 @@ const openAttendance = () => {
     query: { section: decodedSectionName.value, subject: decodedSubjectName.value }
   });
 };
+
+onMounted(() => initializeRealtimeListener());
+onUnmounted(() => stopRealtimeListener());
 </script>
 
 <style scoped>
 .subject-detail-page {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
   min-height: calc(100vh - 120px);
   padding: 20px;
   background: linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
@@ -123,6 +109,7 @@ const openAttendance = () => {
   align-items: center;
   gap: 16px;
   margin-bottom: 20px;
+  min-width: 0;
 }
 
 .back-button,
@@ -157,6 +144,9 @@ const openAttendance = () => {
 }
 
 .student-search {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   --background: rgba(15, 23, 42, 0.8);
   --color: #ffffff;
   --placeholder-color: #94a3b8;
@@ -174,12 +164,14 @@ const openAttendance = () => {
 .student-list,
 .subjects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 16px;
+  min-width: 0;
 }
 
 .student-card,
 .subject-card {
+  min-width: 0;
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
   border: 1px solid rgba(96, 165, 250, 0.45);
   border-radius: 14px;
@@ -238,6 +230,8 @@ const openAttendance = () => {
 }
 
 .empty-state {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   min-height: 220px;
   align-items: center;
@@ -256,7 +250,7 @@ const openAttendance = () => {
 
 @media (max-width: 560px) {
   .subject-detail-page {
-    padding: 14px;
+    padding: 16px clamp(16px, 5vw, 24px);
   }
 
   .page-header {

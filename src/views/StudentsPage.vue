@@ -38,21 +38,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { IonIcon } from '@ionic/vue';
 import { peopleOutline } from 'ionicons/icons';
 import { getCurrentUserProfile } from '../services/roleAuthService';
 import { useClassCatalog } from '../services/classCatalogService';
-
-interface StudentProfile {
-  username: string;
-  fullName?: string;
-  gender?: string;
-  section?: string;
-  subject?: string;
-  role?: string;
-}
+import { initializeRealtimeListener, stopRealtimeListener, useRecords } from '../services/firestoreService';
+import { getDirectoryStudents, StudentDirectoryProfile } from '../services/studentDirectoryService';
 
 const router = useRouter();
 const currentProfile = getCurrentUserProfile();
@@ -60,18 +53,9 @@ const isAdmin = currentProfile?.role === 'admin';
 const newSection = ref('');
 const newSubject = ref('');
 const { sections, addSection, addSubject } = useClassCatalog();
+const records = useRecords();
 
-const students = computed<StudentProfile[]>(() => {
-  const stored = localStorage.getItem('attendanceUsers');
-  if (!stored) return [];
-
-  try {
-    const parsed = JSON.parse(stored) as StudentProfile[];
-    return parsed.filter((user) => user.role === 'student');
-  } catch {
-    return [];
-  }
-});
+const students = computed<StudentDirectoryProfile[]>(() => getDirectoryStudents(records.value));
 
 const sectionGroups = computed(() => {
   if (currentProfile?.role === 'student') {
@@ -100,6 +84,9 @@ const addNewSubject = () => {
   if (addSubject(newSubject.value)) newSubject.value = '';
 };
 
+onMounted(() => initializeRealtimeListener());
+onUnmounted(() => stopRealtimeListener());
+
 const openSection = (sectionName: string) => {
   router.push(`/students/${encodeURIComponent(sectionName)}`);
 };
@@ -107,6 +94,10 @@ const openSection = (sectionName: string) => {
 
 <style scoped>
 .students-page {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
   padding: 20px;
   background: linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
   min-height: calc(100vh - 120px);
@@ -147,11 +138,13 @@ const openSection = (sectionName: string) => {
 
 .sections-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 18px;
+  min-width: 0;
 }
 
 .section-card {
+  min-width: 0;
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
   border: 1px solid rgba(96, 165, 250, 0.45);
   border-radius: 14px;
@@ -220,6 +213,8 @@ const openSection = (sectionName: string) => {
 }
 
 .empty-state {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -245,7 +240,7 @@ const openSection = (sectionName: string) => {
 
 @media (max-width: 560px) {
   .students-page {
-    padding: 14px;
+    padding: 16px clamp(16px, 5vw, 24px);
   }
 
   .section-card {

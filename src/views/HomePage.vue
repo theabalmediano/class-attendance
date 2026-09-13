@@ -1,16 +1,17 @@
 <template>
   <ion-page>
     <div class="admin-shell">
-      <button
-        v-if="showMobileMenuToggle"
-        class="mobile-menu-toggle"
-        type="button"
-        @click="isSidebarOpen = !isSidebarOpen"
-        aria-label="Toggle navigation menu"
-        :aria-expanded="isSidebarOpen"
-      >
-        <ion-icon :icon="menuOutline"></ion-icon>
-      </button>
+      <div v-if="showMobileMenuToggle" class="mobile-nav-bar">
+        <button
+          class="mobile-menu-toggle"
+          type="button"
+          @click="isSidebarOpen = !isSidebarOpen"
+          aria-label="Toggle navigation menu"
+          :aria-expanded="isSidebarOpen"
+        >
+          <ion-icon :icon="menuOutline"></ion-icon>
+        </button>
+      </div>
       <button
         v-if="isSidebarOpen"
         class="sidebar-backdrop"
@@ -190,22 +191,22 @@ watch(() => route?.fullPath, () => {
 }
 
 .mobile-menu-toggle {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  z-index: 1002;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 42px;
   height: 38px;
-  margin: 10px 12px 0;
+  margin: 0;
   border: 1px solid rgba(96, 165, 250, 0.6);
   border-radius: 8px;
   background: rgba(30, 41, 59, 0.95);
   color: #ffffff;
   font-size: 22px;
   cursor: pointer;
+}
+
+.mobile-nav-bar {
+  display: none;
 }
 
 .sidebar-backdrop {
@@ -240,6 +241,19 @@ watch(() => route?.fullPath, () => {
     display: flex;
   }
 
+  .mobile-nav-bar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    height: 56px;
+    padding: 8px 16px;
+    box-sizing: border-box;
+    background: #0f172a;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+  }
+
   .sidebar-backdrop {
     position: fixed;
     inset: 0;
@@ -251,6 +265,8 @@ watch(() => route?.fullPath, () => {
 
   .content-panel {
     width: 100%;
+    box-sizing: border-box;
+    padding-top: 64px;
   }
 
   .sidebar-nav {

@@ -22,26 +22,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { IonIcon } from '@ionic/vue';
 import { peopleOutline } from 'ionicons/icons';
 import { getCurrentUserProfile } from '../services/roleAuthService';
 import { useClassCatalog } from '../services/classCatalogService';
-
-interface StudentProfile {
-  username: string;
-  fullName?: string;
-  gender?: string;
-  section?: string;
-  subject?: string;
-  role?: string;
-}
+import { initializeRealtimeListener, stopRealtimeListener, useRecords } from '../services/firestoreService';
+import { getDirectoryStudents, StudentDirectoryProfile } from '../services/studentDirectoryService';
 
 const route = useRoute();
 const router = useRouter();
 const currentProfile = getCurrentUserProfile();
 const { subjects: catalogSubjects } = useClassCatalog();
+const records = useRecords();
 const subjects = computed(() => {
   if (currentProfile?.role !== 'student') return catalogSubjects.value;
   if (currentProfile.section?.trim() !== decodedSectionName.value || !currentProfile.subject?.trim()) return [];
@@ -50,19 +44,9 @@ const subjects = computed(() => {
 
 const decodedSectionName = computed(() => decodeURIComponent(String(route.params.sectionName || '')));
 
-const students = computed<StudentProfile[]>(() => {
-  const stored = localStorage.getItem('attendanceUsers');
-  if (!stored) return [];
-
-  try {
-    const parsed = JSON.parse(stored) as StudentProfile[];
-    return parsed.filter(
-      (user) => user.role === 'student' && user.section && user.section.trim() === decodedSectionName.value
-    );
-  } catch {
-    return [];
-  }
-});
+const students = computed<StudentDirectoryProfile[]>(() => getDirectoryStudents(records.value).filter(
+  (student) => student.section?.trim() === decodedSectionName.value
+));
 
 const subjectCounts = computed<Record<string, number>>(() => Object.fromEntries(
   subjects.value.map((subject) => [subject, students.value.filter((student) => student.subject?.trim() === subject).length])
@@ -75,10 +59,17 @@ const openSubject = (subjectName: string) => {
 const goBack = () => {
   router.push('/students');
 };
+
+onMounted(() => initializeRealtimeListener());
+onUnmounted(() => stopRealtimeListener());
 </script>
 
 <style scoped>
 .section-detail-page {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
   padding: 20px;
   background: linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
   min-height: calc(100vh - 120px);
@@ -117,11 +108,13 @@ const goBack = () => {
 
 .subjects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 16px;
+  min-width: 0;
 }
 
 .subject-card {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -154,6 +147,8 @@ const goBack = () => {
 }
 
 .empty-state {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -177,7 +172,7 @@ const goBack = () => {
 
 @media (max-width: 560px) {
   .section-detail-page {
-    padding: 14px;
+    padding: 16px clamp(16px, 5vw, 24px);
   }
 
   .page-header {
