@@ -228,7 +228,7 @@ watch(() => route?.fullPath, () => {
     flex-shrink: 0;
     border-right: 1px solid rgba(59, 130, 246, 0.3);
     border-bottom: none;
-    padding-top: 64px;
+    padding-top: calc(64px + env(safe-area-inset-top));
     transition: transform 0.2s ease;
   }
 
@@ -247,11 +247,25 @@ watch(() => route?.fullPath, () => {
     z-index: 1100;
     display: flex;
     align-items: center;
-    height: 56px;
-    padding: 8px 16px;
+    height: calc(69px + env(safe-area-inset-top));
+    padding: calc(21px + env(safe-area-inset-top)) 16px 8px;
     box-sizing: border-box;
     background: #0f172a;
     border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+  }
+
+  .mobile-menu-toggle {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    min-height: 48px;
+    color: #ffffff;
+    -webkit-text-fill-color: #ffffff;
+    transform: translateY(13px);
+  }
+
+  .mobile-menu-toggle ion-icon {
+    color: #ffffff;
   }
 
   .sidebar-backdrop {
@@ -266,7 +280,7 @@ watch(() => route?.fullPath, () => {
   .content-panel {
     width: 100%;
     box-sizing: border-box;
-    padding-top: 64px;
+    padding-top: calc(74px + env(safe-area-inset-top));
   }
 
   .sidebar-nav {
@@ -276,6 +290,13 @@ watch(() => route?.fullPath, () => {
 
   .nav-item {
     flex: 1 1 180px;
+    color: #dbeafe;
+    -webkit-text-fill-color: #dbeafe;
+  }
+
+  .nav-item span,
+  .sidebar-brand {
+    color: #ffffff;
   }
 }
 </style>

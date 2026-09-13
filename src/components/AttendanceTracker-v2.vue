@@ -258,7 +258,11 @@
 
         <ion-item class="dark-item">
           <ion-label position="stacked">Date Filter</ion-label>
-          <ion-select v-model="dateFilterPreset" @ion-change="onDateFilterChange">
+          <ion-select
+            v-model="dateFilterPreset"
+            class="date-filter-select"
+            @ion-change="onDateFilterChange"
+          >
             <ion-select-option value="all">All Dates</ion-select-option>
             <ion-select-option value="today">Today</ion-select-option>
             <ion-select-option value="week">This Week</ion-select-option>
@@ -749,7 +753,6 @@ onUnmounted(() => {
 .attendance-container {
   width: min(100%, 1100px);
   max-width: 1100px;
-  box-sizing: border-box;
   padding: clamp(12px, 2vw, 24px);
   margin: 0 auto;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -1241,6 +1244,22 @@ ion-button {
   border-radius: 8px;
 }
 
+.date-filter-select {
+  --color: #ffffff;
+  --placeholder-color: #cbd5e1;
+  --placeholder-opacity: 1;
+  --highlight-color: #60a5fa;
+}
+
+.date-filter-select::part(container) {
+  color: #ffffff;
+}
+
+.date-filter-select::part(icon) {
+  color: #60a5fa;
+  opacity: 1;
+}
+
 .button-group {
   display: flex;
   flex-direction: column;
@@ -1251,8 +1270,6 @@ ion-button {
 @media (max-width: 860px) {
   .attendance-container {
     width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
   }
 
   .controls-section {
@@ -1286,7 +1303,7 @@ ion-button {
 
 @media (max-width: 560px) {
   .attendance-container {
-    padding: 16px clamp(16px, 5vw, 24px);
+    padding: 12px;
   }
 
   .controls-section {
@@ -1295,11 +1312,6 @@ ion-button {
 
   .action-group {
     gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .user-profile {
-    flex: 1 1 100%;
   }
 
   .filter-btn,
@@ -1318,7 +1330,6 @@ ion-button {
 
   .record-card {
     padding: 14px;
-    min-width: 0;
   }
 
   .record-header {
@@ -1387,7 +1398,7 @@ ion-button {
 }
 
 ::v-deep(.picker-column-highlight) {
-  background: rgba(59, 130, 246, 0.2) !important;
+  background: rgba(240, 241, 241, 0.2) !important;
   color: #3b82f6 !important;
   font-weight: 700 !important;
 }
